@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from pyomnilogic_local import OmniLogic
 from pyomnilogic_local.omnitypes import OmniType
 
-from .const import BACKYARD_SYSTEM_ID, DOMAIN, KEY_COORDINATOR
+from .const import BACKYARD_SYSTEM_ID, DOMAIN, KEY_COORDINATOR, SUGGESTED_AREA
 from .coordinator import OmniLogicCoordinator
 
 if TYPE_CHECKING:
@@ -58,13 +58,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_registry = dr.async_get(hass)
 
+    # Create a device for the Omni System if needed
+    if len(coordinator.omni.groups) > 0:
+        _LOGGER.debug("Creating device for system")
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, "system")},
+            manufacturer="Hayward",
+            suggested_area=SUGGESTED_AREA,
+            name=f"{entry.data[CONF_NAME]} System",
+        )
+
     # Create a device for the Omni Backyard
     _LOGGER.debug("Creating device for backyard: %s", omni.backyard)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"backyard_{BACKYARD_SYSTEM_ID}")},
         manufacturer="Hayward",
-        suggested_area="Back Yard",
+        suggested_area=SUGGESTED_AREA,
         name=f"{entry.data[CONF_NAME]} {omni.backyard.name}",
     )
 
@@ -75,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, f"bow_{bow.system_id}")},
             manufacturer="Hayward",
-            suggested_area="Back Yard",
+            suggested_area=SUGGESTED_AREA,
             name=f"{entry.data[CONF_NAME]} {bow.name}",
         )
 
